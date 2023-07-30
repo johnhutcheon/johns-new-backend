@@ -1,3 +1,8 @@
 # Northcoders News API
 
-For instructions, please head over to [L2C NC News](https://l2c.northcoders.com/courses/be/nc-news).
+Welcome to NC News!
+
+In order to connect the databases, please create
+
+- A .env.development file which contains PGDATABASE=nc_news
+- A .env.test file which contains PGDATABASE=nc_news_test
