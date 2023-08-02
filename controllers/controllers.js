@@ -17,6 +17,7 @@ exports.getTopics = (req, res, err) => {
 };
 
 exports.getEndpoints = (req, res) => {
+  console.log("hello");
   res.status(200).send(endpoints);
 };
 
