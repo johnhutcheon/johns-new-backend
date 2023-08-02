@@ -36,6 +36,7 @@ exports.getSingleArticle = (req, res, next) => {
 // };
 
 exports.getArticles = (req, res, next) => {
+  console.log("hello");
   const { topic, order, sort_by } = req.query;
   fetchArticles(topic, order, sort_by)
     .then((articles) => {
