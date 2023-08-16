@@ -10,6 +10,8 @@ beforeEach(() => seed(testData));
 
 afterAll(() => connection.end());
 
+// alternatively, the above might need a return if its not one line.
+
 describe("2. GET /api/topics", () => {
   test("Responds with a status 200 and an array of topic objects, each with slug and description properties", () => {
     return request(app)
@@ -66,6 +68,7 @@ describe("4. GET /api/articles/:article_id", () => {
         });
       });
   });
+
   test("responds with a 404 error when a valid but non-existent ID is requested", () => {
     return request(app)
       .get("/api/articles/999")
