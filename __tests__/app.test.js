@@ -280,6 +280,7 @@ describe("8. PATCH /api/articles/:article_id", () => {
       .send(votesObject)
       .expect(200)
       .then(({ body }) => {
+        console.log(body);
         expect(body.article.votes).toBe(1);
       });
   });
@@ -426,7 +427,6 @@ describe("12. GET /api/articles/:article_id (comment count)", () => {
       .get("/api/articles/4")
       .expect(200)
       .then(({ body }) => {
-        console.log(body.article);
         expect(body.article).toMatchObject({
           article_id: 4,
           title: expect.any(String),
@@ -437,6 +437,53 @@ describe("12. GET /api/articles/:article_id (comment count)", () => {
           article_img_url: expect.any(String),
           comment_count: expect.any(String),
         });
+      });
+  });
+});
+
+describe("16. GET /api/users/:username", () => {
+  test("responds with a 200 and returns the correct properties for a specific username", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.user[0]).toMatchObject({
+          username: "butter_bridge",
+          name: "jonny",
+          avatar_url:
+            "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg",
+        });
+      });
+  });
+  test("responds with a 404 if username does not exist", () => {
+    return request(app)
+      .get("/api/users/bananaman")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toEqual("User not found.");
+      });
+  });
+});
+
+describe("17. PATCH /api/comments/:comment_id", () => {
+  test("responds with 200 and updates selected comment with amount of votes passed", () => {
+    const votesObject = { inc_votes: 1 };
+    return request(app)
+      .patch("/api/comments/3")
+      .send(votesObject)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.votes).toEqual(101);
+      });
+  });
+  test("responds with a 404 if valid but non-existent comment ID is requested", () => {
+    const votesObject = { inc_votes: 1 };
+    return request(app)
+      .patch("/api/comments/999")
+      .send(votesObject)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toEqual("Comment ID not found");
       });
   });
 });

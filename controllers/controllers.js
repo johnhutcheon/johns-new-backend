@@ -4,9 +4,11 @@ const {
   fetchArticles,
   fetchComments,
   addComment,
-  patchVotes,
+  patchArticleVotes,
   removeComment,
   fetchUsers,
+  fetchUsername,
+  patchCommentVotes,
 } = require("../models/models");
 const endpoints = require("../endpoints.json");
 
@@ -67,10 +69,10 @@ exports.postComment = (req, res, next) => {
     .catch(next);
 };
 
-exports.updateVotes = (req, res, next) => {
+exports.updateArticleVotes = (req, res, next) => {
   const { article_id } = req.params;
   const { inc_votes } = req.body; //req.body.inc_votes
-  patchVotes(inc_votes, article_id)
+  patchArticleVotes(inc_votes, article_id)
     .then((article) => {
       res.status(200).send({ article });
     })
@@ -90,6 +92,25 @@ exports.getUsers = (req, res, next) => {
   fetchUsers()
     .then((users) => {
       res.status(200).send({ users });
+    })
+    .catch(next);
+};
+
+exports.getUsername = (req, res, next) => {
+  const { username } = req.params;
+  fetchUsername(username)
+    .then((user) => {
+      res.status(200).send({ user });
+    })
+    .catch(next);
+};
+
+exports.updateCommentVotes = (req, res, next) => {
+  const { comment_id } = req.params;
+  const { inc_votes } = req.body;
+  patchCommentVotes(inc_votes, comment_id)
+    .then((updatedComment) => {
+      res.status(200).send(updatedComment);
     })
     .catch(next);
 };

@@ -10,8 +10,10 @@ const {
   getComments,
   getUsers,
   postComment,
-  updateVotes,
+  updateArticleVotes,
   deleteComment,
+  getUsername,
+  updateCommentVotes,
 } = require("./controllers/controllers");
 
 const {
@@ -31,9 +33,11 @@ app.get("/api/articles/:article_id", getSingleArticle);
 app.get("/api/articles", getArticles);
 app.get("/api/articles/:article_id/comments", getComments);
 app.get("/api/users", getUsers);
+app.get("/api/users/:username", getUsername);
 app.post("/api/articles/:article_id/comments", postComment);
-app.patch("/api/articles/:article_id", updateVotes);
+app.patch("/api/articles/:article_id", updateArticleVotes);
 app.delete("/api/comments/:comment_id", deleteComment);
+app.patch("/api/comments/:comment_id", updateCommentVotes);
 
 app.all("*", handleInvalidPath);
 
