@@ -280,7 +280,6 @@ describe("8. PATCH /api/articles/:article_id", () => {
       .send(votesObject)
       .expect(200)
       .then(({ body }) => {
-        console.log(body);
         expect(body.article.votes).toBe(1);
       });
   });
@@ -441,7 +440,7 @@ describe("12. GET /api/articles/:article_id (comment count)", () => {
   });
 });
 
-describe("16. GET /api/users/:username", () => {
+describe("17. GET /api/users/:username", () => {
   test("responds with a 200 and returns the correct properties for a specific username", () => {
     return request(app)
       .get("/api/users/butter_bridge")
@@ -465,7 +464,7 @@ describe("16. GET /api/users/:username", () => {
   });
 });
 
-describe("17. PATCH /api/comments/:comment_id", () => {
+describe("18. PATCH /api/comments/:comment_id", () => {
   test("responds with 200 and updates selected comment with amount of votes passed", () => {
     const votesObject = { inc_votes: 1 };
     return request(app)
@@ -484,6 +483,214 @@ describe("17. PATCH /api/comments/:comment_id", () => {
       .expect(404)
       .then(({ body }) => {
         expect(body.message).toEqual("Comment ID not found");
+      });
+  });
+});
+
+describe("19. POST /api/articles", () => {
+  test("responds with a 201 and created article", () => {
+    const articleObj = {
+      author: "butter_bridge",
+      title: "Hiya",
+      body: "this is my body",
+      topic: "cats",
+      article_img_url:
+        "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F82346fd4-4737-4551-95f8-1295bd6fc743_1200x824.jpeg",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(articleObj)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.postedArticle).toEqual(
+          expect.objectContaining({
+            author: "butter_bridge",
+            title: "Hiya",
+            body: "this is my body",
+            topic: "cats",
+            article_img_url:
+              "https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F82346fd4-4737-4551-95f8-1295bd6fc743_1200x824.jpeg",
+          })
+        );
+      });
+  });
+  test("if article_img_url is not defined, it responds with default value", () => {
+    const articleObj = {
+      author: "butter_bridge",
+      title: "Hiya",
+      body: "this is my body",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(articleObj)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.postedArticle.article_img_url).toEqual(
+          "https://www.pulsecarshalton.co.uk/wp-content/uploads/2016/08/jk-placeholder-image.jpg"
+        );
+      });
+  });
+
+  test("responds with a 201, ignoring unnecessary properties", () => {
+    const articleObj = {
+      author: "butter_bridge",
+      title: "Hiya",
+      body: "this is my body",
+      topic: "cats",
+      banana: "ignore this",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(articleObj)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.postedArticle).not.toHaveProperty("banana");
+      });
+  });
+
+  test("responds with a 400 if missing fields", () => {
+    const articleObj = {
+      author: "butter_bridge",
+      title: "Hiya",
+      body: "this is my body",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(articleObj)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toEqual("400 - Bad request");
+      });
+  });
+
+  test("responds with a 404 if author does not exist", () => {
+    const articleObj = {
+      author: "john",
+      title: "Hiya",
+      body: "this is my body",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(articleObj)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toEqual("404 - Not Found");
+      });
+  });
+});
+
+describe("20. GET /api/articles (pagination)", () => {
+  test("responds with a default limit of 10 when there are 13 articles", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.articles.length).toBe(10);
+      });
+  });
+  test("responds with specified limit when one is provided", () => {
+    return request(app)
+      .get("/api/articles?limit=7")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.articles.length).toBe(7);
+      });
+  });
+  test("responds with a 400 if the limit is not valid", () => {
+    return request(app)
+      .get("/api/articles?limit=bananas")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toEqual("Invalid Query");
+      });
+  });
+});
+
+describe("21. GET /api/articles/:article_id/comments (pagination)", () => {
+  test("responds with a default limit of 10 for article with 11 comments", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments.length).toBe(10);
+      });
+  });
+  test("responds with specified limit when one is provided", () => {
+    return request(app)
+      .get("/api/articles/1/comments?limit=4")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments.length).toBe(4);
+      });
+  });
+  test("responds with a 400 if the limit is not valid", () => {
+    return request(app)
+      .get("/api/articles/1/comments?limit=bananas")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toEqual("Invalid Query");
+      });
+  });
+});
+
+describe("22. POST /api/topics", () => {
+  test("responds with a 201 and the posted topic", () => {
+    const topicToPost = {
+      slug: "northcoders",
+      description: "a lovely place to work",
+    };
+    return request(app)
+      .post("/api/topics")
+      .send(topicToPost)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.postedTopic).toEqual(
+          expect.objectContaining({
+            slug: "northcoders",
+            description: "a lovely place to work",
+          })
+        );
+      });
+  });
+  test("responds with a 201 and the posted topic if extra properties are passed", () => {
+    const topicToPost = {
+      slug: "northcoders",
+      description: "a lovely place to work",
+      bananas: "a lovely bunch",
+    };
+    return request(app)
+      .post("/api/topics")
+      .send(topicToPost)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.postedTopic).not.toHaveProperty("bananas");
+      });
+  });
+  test("responds with a 400 if missing required slug field in the post object", () => {
+    const topicToPost = {
+      description: "northcoders",
+    };
+    return request(app)
+      .post("/api/topics")
+      .send(topicToPost)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toEqual("400 - Bad request");
+      });
+  });
+  test("responds with a 400 and message advising user to add a description if it's missing", () => {
+    const topicToPost = {
+      slug: "northcoders",
+    };
+    return request(app)
+      .post("/api/topics")
+      .send(topicToPost)
+      .expect(400)
+      .then(({ body }) => {
+        console.log(body);
+        expect(body.message).toEqual("Please add a description!");
       });
   });
 });

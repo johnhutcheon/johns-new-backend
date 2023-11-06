@@ -25,20 +25,29 @@ exports.fetchSingleArticle = (article_id) => {
 // exports.fetchArticles = () => {
 //   return db
 //     .query(
-`SELECT articles.title, articles.topic, articles.author, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count
-  FROM articles
-  LEFT JOIN comments ON comments.article_id = articles.article_id GROUP BY articles.article_id ORDER BY articles.created_at DESC;`;
+// `SELECT articles.title, articles.topic, articles.author, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count
+//   FROM articles
+//   LEFT JOIN comments ON comments.article_id = articles.article_id GROUP BY articles.article_id ORDER BY articles.created_at DESC;`;
 //     )
 //     .then((result) => {
 //       return result.rows;
 //     });
 // };
 
-exports.fetchArticles = (topic, order = "DESC", sort_by = "created_at") => {
+exports.fetchArticles = (
+  topic,
+  order = "DESC",
+  sort_by = "created_at",
+  limit = "10"
+) => {
   const validOrder = ["asc", "ASC", "desc", "DESC"];
   const validSortBy = ["title", "topic", "author", "created_at", "votes"];
 
-  if (!validOrder.includes(order) || !validSortBy.includes(sort_by)) {
+  if (
+    !validOrder.includes(order) ||
+    !validSortBy.includes(sort_by) ||
+    isNaN(parseInt(limit))
+  ) {
     return Promise.reject({ status: 400, message: "Invalid Query" });
   }
 
@@ -52,13 +61,13 @@ LEFT JOIN comments ON comments.article_id = articles.article_id`;
     return checkTopicExists(topic).then(() => {
       queryStr += " WHERE topic = $1";
       queryValues.push(topic);
-      queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order}`;
+      queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order} LIMIT ${limit}`;
       return db.query(queryStr, queryValues).then((result) => {
         return result.rows;
       });
     });
   } else {
-    queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order}`;
+    queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order} LIMIT ${limit}`;
 
     return db.query(queryStr, queryValues).then((result) => {
       return result.rows;
@@ -66,10 +75,14 @@ LEFT JOIN comments ON comments.article_id = articles.article_id`;
   }
 };
 
-exports.fetchComments = (article_id) => {
+exports.fetchComments = (article_id, limit = "10") => {
+  if (isNaN(parseInt(limit))) {
+    return Promise.reject({ status: 400, message: "Invalid Query" });
+  }
+
   return db
     .query(
-      "SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC",
+      `SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC LIMIT ${limit}`,
       [article_id]
     )
     .then(({ rows }) => {
@@ -142,6 +155,56 @@ exports.patchCommentVotes = (votes, comment_id) => {
       if (result.rows.length === 0) {
         return Promise.reject({ status: 404, message: "Comment ID not found" });
       }
+      return result.rows[0];
+    });
+};
+
+exports.addArticle = (newArticle) => {
+  const {
+    author,
+    title,
+    body,
+    topic,
+    article_img_url = "https://www.pulsecarshalton.co.uk/wp-content/uploads/2016/08/jk-placeholder-image.jpg",
+  } = newArticle;
+
+  return db
+    .query(
+      "INSERT INTO articles (author, title, body, topic, article_img_url) VALUES($1, $2, $3, $4, $5) RETURNING *;",
+      [author, title, body, topic, article_img_url]
+    )
+    .then((result) => {
+      const newArticle = result.rows[0];
+
+      return db
+        .query(
+          "SELECT COUNT(comment_id) AS comment_count FROM comments WHERE article_id = $1",
+          [newArticle.article_id]
+        )
+        .then((newArticleCommentCount) => {
+          const commentCount = newArticleCommentCount.rows[0].comment_count;
+          newArticle.comment_count = commentCount;
+          return newArticle;
+        });
+    });
+};
+
+exports.addTopic = (newTopic) => {
+  const { slug, description } = newTopic;
+
+  if (!description) {
+    return Promise.reject({
+      status: 400,
+      message: "Please add a description!",
+    });
+  }
+
+  return db
+    .query(
+      "INSERT INTO topics (slug, description) VALUES ($1, $2) RETURNING *;",
+      [slug, description]
+    )
+    .then((result) => {
       return result.rows[0];
     });
 };

@@ -14,6 +14,8 @@ const {
   deleteComment,
   getUsername,
   updateCommentVotes,
+  postArticle,
+  postTopic,
 } = require("./controllers/controllers");
 
 const {
@@ -38,6 +40,8 @@ app.post("/api/articles/:article_id/comments", postComment);
 app.patch("/api/articles/:article_id", updateArticleVotes);
 app.delete("/api/comments/:comment_id", deleteComment);
 app.patch("/api/comments/:comment_id", updateCommentVotes);
+app.post("/api/articles", postArticle);
+app.post("/api/topics", postTopic);
 
 app.all("*", handleInvalidPath);
 

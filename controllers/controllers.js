@@ -9,6 +9,8 @@ const {
   fetchUsers,
   fetchUsername,
   patchCommentVotes,
+  addArticle,
+  addTopic,
 } = require("../models/models");
 const endpoints = require("../endpoints.json");
 
@@ -32,16 +34,9 @@ exports.getSingleArticle = (req, res, next) => {
     .catch(next);
 };
 
-// exports.getArticles = (req, res, next) => {
-//   fetchArticles().then((articles) => {
-//     res.status(200).send({ articles });
-//   });
-// };
-
 exports.getArticles = (req, res, next) => {
-  console.log("hello");
-  const { topic, order, sort_by } = req.query;
-  fetchArticles(topic, order, sort_by)
+  const { topic, order, sort_by, limit } = req.query;
+  fetchArticles(topic, order, sort_by, limit)
     .then((articles) => {
       res.status(200).send({ articles });
     })
@@ -50,8 +45,12 @@ exports.getArticles = (req, res, next) => {
 
 exports.getComments = (req, res, next) => {
   const { article_id } = req.params;
+  const { limit } = req.query;
 
-  Promise.all([fetchSingleArticle(article_id), fetchComments(article_id)])
+  Promise.all([
+    fetchSingleArticle(article_id),
+    fetchComments(article_id, limit),
+  ])
     .then(([promiseOne, comments]) => {
       res.status(200).send({ comments });
     })
@@ -71,7 +70,7 @@ exports.postComment = (req, res, next) => {
 
 exports.updateArticleVotes = (req, res, next) => {
   const { article_id } = req.params;
-  const { inc_votes } = req.body; //req.body.inc_votes
+  const { inc_votes } = req.body;
   patchArticleVotes(inc_votes, article_id)
     .then((article) => {
       res.status(200).send({ article });
@@ -111,6 +110,24 @@ exports.updateCommentVotes = (req, res, next) => {
   patchCommentVotes(inc_votes, comment_id)
     .then((updatedComment) => {
       res.status(200).send(updatedComment);
+    })
+    .catch(next);
+};
+
+exports.postArticle = (req, res, next) => {
+  const newArticle = req.body;
+  addArticle(newArticle)
+    .then((postedArticle) => {
+      res.status(201).send({ postedArticle });
+    })
+    .catch(next);
+};
+
+exports.postTopic = (req, res, next) => {
+  const newTopic = req.body;
+  addTopic(newTopic)
+    .then((postedTopic) => {
+      res.status(201).send({ postedTopic });
     })
     .catch(next);
 };
