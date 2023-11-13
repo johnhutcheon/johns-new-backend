@@ -69,7 +69,7 @@ describe("4. GET /api/articles/:article_id", () => {
       });
   });
 
-  test.only("responds with a 404 error when a valid but non-existent ID is requested", () => {
+  test("responds with a 404 error when a valid but non-existent ID is requested", () => {
     return request(app)
       .get("/api/articles/999")
       .expect(404)
@@ -274,7 +274,7 @@ describe("7. POST /api/articles/:article_id/comments", () => {
 });
 
 describe("8. PATCH /api/articles/:article_id", () => {
-  test.only("responds with 200 and updates selected article with amount of votes passed", () => {
+  test("responds with 200 and updates selected article with amount of votes passed", () => {
     const votesObject = { inc_votes: 1 };
     return request(app)
       .patch("/api/articles/2")
