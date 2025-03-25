@@ -10,8 +10,6 @@ beforeEach(() => seed(testData));
 
 afterAll(() => connection.end());
 
-// alternatively, the above might need a return if its not one line.
-
 describe("2. GET /api/topics", () => {
   test("Responds with a status 200 and an array of topic objects, each with slug and description properties", () => {
     return request(app)
@@ -74,7 +72,6 @@ describe("4. GET /api/articles/:article_id", () => {
       .get("/api/articles/999")
       .expect(404)
       .then(({ body }) => {
-        console.log(body);
         expect(body.message).toEqual("Page not found");
       });
   });
@@ -690,7 +687,6 @@ describe("22. POST /api/topics", () => {
       .send(topicToPost)
       .expect(400)
       .then(({ body }) => {
-        console.log(body);
         expect(body.message).toEqual("Please add a description!");
       });
   });

@@ -21,7 +21,6 @@ exports.getTopics = (req, res, err) => {
 };
 
 exports.getEndpoints = (req, res) => {
-  console.log("hello");
   res.status(200).send(endpoints);
 };
 
@@ -54,7 +53,9 @@ exports.getComments = (req, res, next) => {
     .then(([promiseOne, comments]) => {
       res.status(200).send({ comments });
     })
-    .catch(next);
+    .catch((err)=> {
+      next(err)
+    });
 };
 
 exports.postComment = (req, res, next) => {
@@ -71,11 +72,9 @@ exports.postComment = (req, res, next) => {
 exports.updateArticleVotes = (req, res, next) => {
   const { article_id } = req.params;
   const { inc_votes } = req.body;
-  console.log(inc_votes);
   patchArticleVotes(inc_votes, article_id)
     .then((article) => {
       res.status(200).send({ article });
-      console.log(article);
     })
     .catch(next);
 };
